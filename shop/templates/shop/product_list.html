@@ -1,0 +1,114 @@
+{% extends "shop/base.html" %}
+
+{% block title %}{{ page_title }} - Магазин товаров{% endblock %}
+{% block header %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="filters">
+    <form method="get" action=".">
+        <h3>Фильтры:</h3>
+        
+        <label for="q">Поиск:</label>
+        <input type="text" name="q" id="q" value="{{ search_query }}" placeholder="Поиск товаров...">
+        
+        <label for="size">Размер:</label>
+        <select name="size" id="size">
+            <option value="all">Все размеры</option>
+            {% for size in available_sizes %}
+            <option value="{{ size }}" {% if size_filter == size %}selected{% endif %}>
+                {{ size }}
+            </option>
+            {% endfor %}
+        </select>
+        
+        <label for="price_min">Цена от:</label>
+        <input type="number" name="price_min" id="price_min" value="{{ price_min }}" placeholder="0" step="0.01">
+        
+        <label for="price_max">Цена до:</label>
+        <input type="number" name="price_max" id="price_max" value="{{ price_max }}" placeholder="10000" step="0.01">
+        
+        <label for="sort">Сортировка:</label>
+        <select name="sort" id="sort">
+            {% for key, name in sort_options.items %}
+            <option value="{{ key }}" {% if sort_by == key %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        
+        <select name="order">
+            {% for key, name in order_options.items %}
+            <option value="{{ key }}" {% if order == key %}selected{% endif %}>{{ name }}</option>
+            {% endfor %}
+        </select>
+        
+        <button type="submit">Применить</button>
+        <a href=".">Сбросить</a>
+    </form>
+</div>
+
+{% if category %}
+    <h2>Категория: {{ category.name }}</h2>
+    {% if category.description %}
+        <p>{{ category.description }}</p>
+    {% endif %}
+{% endif %}
+
+<div class="product-grid">
+    {% for product in products %}
+    <div class="product-card">
+        {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="product-image" style="background: #eee; display: none; align-items: center; justify-content: center;">
+                📷 Нет изображения
+            </div>
+        {% else %}
+            <div class="product-image" style="background: #eee; display: flex; align-items: center; justify-content: center;">
+                📷 Нет изображения
+            </div>
+        {% endif %}
+        
+        <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
+        
+        <p>Размер: {{ product.get_size_display }}</p>
+        
+        <div class="price">
+            {% if product.old_price %}
+                <span class="old-price">{{ product.get_old_price_display }}</span>
+            {% endif %}
+            <span>{{ product.get_price_display }}</span>
+        </div>
+        
+        <p>✅ В наличии</p>
+        
+        <a href="{% url 'shop:product_detail' product.slug %}" style="background: #007bff; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px;">
+            Подробнее
+        </a>
+    </div>
+    {% empty %}
+    <div style="grid-column: 1 / -1; text-align: center; padding: 40px;">
+        <h3>Товары не найдены</h3>
+        <p>Попробуйте изменить параметры фильтрации</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% if products.has_other_pages %}
+<div class="pagination">
+    {% if products.has_previous %}
+        <a href="?page={{ products.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">← Назад</a>
+    {% endif %}
+    
+    {% for i in products.paginator.page_range %}
+        {% if products.number == i %}
+            <span class="current">{{ i }}</span>
+        {% else %}
+            <a href="?page={{ i }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">{{ i }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if products.has_next %}
+        <a href="?page={{ products.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}">Вперед →</a>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

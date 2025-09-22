@@ -1,0 +1,88 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Новые поступления - Магазин товаров{% endblock %}
+{% block header %}🆕 Новые поступления{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 20px;">
+    <p>Самые свежие товары, которые недавно появились в нашем магазине. Успейте приобрести первыми!</p>
+</div>
+
+{% if products %}
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card" style="position: relative;">
+            <!-- Бейдж нового товара -->
+            <div style="position: absolute; top: 10px; left: 10px; background: #20bf6b; color: white; padding: 5px 10px; border-radius: 3px; font-size: 12px; font-weight: bold;">
+                NEW
+            </div>
+            
+            <!-- Дата добавления -->
+            <div style="position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); color: white; padding: 3px 8px; border-radius: 3px; font-size: 11px;">
+                {{ product.created_at|date:"d.m.Y" }}
+            </div>
+            
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+            {% else %}
+                <div class="product-image" style="background: #eee; display: flex; align-items: center; justify-content: center;">
+                    Нет изображения
+                </div>
+            {% endif %}
+            
+            <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
+            
+            <p>Категория: {{ product.category.name }}</p>
+            <p>Размер: {{ product.get_size_display }}</p>
+            
+            <div class="price">
+                {% if product.old_price %}
+                    <span class="old-price">{{ product.get_old_price_display }}</span>
+                {% endif %}
+                <span>{{ product.get_price_display }}</span>
+            </div>
+            
+            <p>{% if product.in_stock %}✅ В наличии{% else %}❌ Нет в наличии{% endif %}</p>
+            
+            {% if product.is_on_sale %}
+            <div style="background: #ff6b6b; color: white; padding: 5px; border-radius: 3px; margin: 5px 0; text-align: center; font-size: 12px;">
+                🎯 Скидка!
+            </div>
+            {% endif %}
+            
+            <a href="{% url 'shop:product_detail' product.slug %}" style="background: #007bff; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px;">
+                Подробнее
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div style="margin-top: 30px; text-align: center;">
+        <p>Показано <strong>{{ products|length }}</strong> новых товаров за последние 30 дней</p>
+    </div>
+{% else %}
+    <div style="text-align: center; padding: 60px 20px;">
+        <h3>📦 Скоро ожидаются новые поступления</h3>
+        <p>Мы постоянно обновляем ассортимент. Следите за обновлениями!</p>
+        <div style="margin-top: 30px;">
+            <a href="{% url 'shop:product_list' %}" style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+                Все товары
+            </a>
+            <a href="{% url 'shop:featured_products' %}" style="background: #ff9f43; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px;">
+                Рекомендуемые
+            </a>
+        </div>
+    </div>
+{% endif %}
+
+<div style="margin-top: 40px; background: #e3f2fd; padding: 20px; border-radius: 5px;">
+    <h3>💡 Первым о новых поступлениях!</h3>
+    <p>Подпишитесь на нашу рассылку и узнавайте о новинках первыми:</p>
+    <form style="display: flex; gap: 10px; margin-top: 15px; max-width: 500px;">
+        <input type="email" placeholder="Ваш email" style="flex: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="submit" style="background: #2196f3; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">
+            Подписаться
+        </button>
+    </form>
+</div>
+{% endblock %}

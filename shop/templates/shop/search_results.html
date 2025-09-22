@@ -1,0 +1,111 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Результаты поиска - Магазин товаров{% endblock %}
+{% block header %}Результаты поиска{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 30px;">
+    <form method="get" action="{% url 'shop:search_results' %}" style="display: flex; gap: 10px; align-items: center;">
+        <input type="text" name="q" value="{{ search_query }}" placeholder="Поиск товаров..." 
+               style="flex: 1; padding: 10px; font-size: 16px; border: 1px solid #ddd; border-radius: 5px;">
+        <button type="submit" style="padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            🔍 Поиск
+        </button>
+    </form>
+</div>
+
+{% if search_query %}
+    <div style="margin-bottom: 20px;">
+        <p>Найдено товаров: <strong>{{ results_count }}</strong></p>
+        <p>По запросу: "<strong>{{ search_query }}</strong>"</p>
+    </div>
+{% endif %}
+
+{% if products %}
+    <div class="product-grid">
+        {% for product in products %}
+        <div class="product-card">
+            {% if product.image %}
+                <img src="{{ product.image.url }}" alt="{{ product.name }}" class="product-image">
+            {% else %}
+                <div class="product-image" style="background: #eee; display: flex; align-items: center; justify-content: center;">
+                    Нет изображения
+                </div>
+            {% endif %}
+            
+            <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
+            
+            <p>Категория: {{ product.category.name }}</p>
+            <p>Размер: {{ product.get_size_display }}</p>
+            
+            <div class="price">
+                {% if product.old_price %}
+                    <span class="old-price">{{ product.get_old_price_display }}</span>
+                {% endif %}
+                <span>{{ product.get_price_display }}</span>
+            </div>
+            
+            <p>{% if product.in_stock %}✅ В наличии{% else %}❌ Нет в наличии{% endif %}</p>
+            
+            <a href="{% url 'shop:product_detail' product.slug %}" style="background: #007bff; color: white; padding: 8px 15px; text-decoration: none; border-radius: 3px;">
+                Подробнее
+            </a>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    {% if search_query %}
+    <div style="text-align: center; padding: 60px 20px;">
+        <h3>😔 Ничего не найдено</h3>
+        <p>Попробуйте изменить поисковый запрос или посмотрите другие наши товары</p>
+        <div style="margin-top: 20px;">
+            <a href="{% url 'shop:product_list' %}" style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+                Все товары
+            </a>
+            <a href="{% url 'shop:featured_products' %}" style="background: #ffc107; color: #333; padding: 12px 25px; text-decoration: none; border-radius: 5px;">
+                Рекомендуемые
+            </a>
+        </div>
+    </div>
+    {% else %}
+    <div style="text-align: center; padding: 60px 20px;">
+        <h3>🔍 Введите поисковый запрос</h3>
+        <p>Найдите нужный товар по названию, описанию или категории</p>
+    </div>
+    {% endif %}
+{% endif %}
+
+{% if products.has_other_pages %}
+<div class="pagination">
+    {% if products.has_previous %}
+        <a href="?q={{ search_query }}&page={{ products.previous_page_number }}">← Назад</a>
+    {% endif %}
+    
+    {% for i in products.paginator.page_range %}
+        {% if products.number == i %}
+            <span class="current">{{ i }}</span>
+        {% else %}
+            <a href="?q={{ search_query }}&page={{ i }}">{{ i }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if products.has_next %}
+        <a href="?q={{ search_query }}&page={{ products.next_page_number }}">Вперед →</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if not search_query and not products %}
+<div style="margin-top: 40px;">
+    <h3>Популярные категории:</h3>
+    <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+        {% for category in categories %}
+        <a href="{% url 'shop:product_list_by_category' category.slug %}" 
+           style="background: #f8f9fa; padding: 10px 20px; border-radius: 20px; text-decoration: none; color: #333; border: 1px solid #ddd;">
+            {{ category.name }}
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

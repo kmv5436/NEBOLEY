@@ -1,0 +1,57 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Категории товаров - Магазин товаров{% endblock %}
+{% block header %}Категории товаров{% endblock %}
+
+{% block content %}
+
+
+{% if categories %}
+    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 20px;">
+        {% for category in categories %}
+        <div style="border: 1px solid #ddd; padding: 20px; border-radius: 5px; text-align: center;">
+            {% if category.image %}
+                <img src="{{ category.image.url }}" alt="{{ category.name }}" style="max-width: 100%; height: 200px; object-fit: cover; margin-bottom: 15px;">
+            {% else %}
+                <div style="background: #eee; height: 200px; display: flex; align-items: center; justify-content: center; margin-bottom: 15px;">
+                    📁 Нет изображения
+                </div>
+            {% endif %}
+            
+            <h3>
+                <a href="{% url 'shop:product_list_by_category' category.slug %}" style="text-decoration: none; color: #333;">
+                    {{ category.name }}
+                </a>
+            </h3>
+            
+            {% if category.description %}
+                <p style="color: #666;">{{ category.description|truncatewords:20 }}</p>
+            {% endif %}
+            
+            <div style="margin-top: 15px;">
+                <a href="{% url 'shop:product_list_by_category' category.slug %}" 
+                   style="background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
+                    Смотреть товары ({{ category.products.count }})
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div style="text-align: center; padding: 60px 20px;">
+        <h3>📂 Категории не найдены</h3>
+        <p>Пока нет активных категорий товаров</p>
+        <p>Проверьте админку: убедитесь, что категории созданы и активны (is_active=True)</p>
+        <div style="margin-top: 20px;">
+            <a href="{% url 'shop:product_list' %}" 
+               style="background: #28a745; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px; margin-right: 10px;">
+                Все товары
+            </a>
+            <a href="/admin/shop/category/add/" 
+               style="background: #17a2b8; color: white; padding: 12px 25px; text-decoration: none; border-radius: 5px;">
+                Добавить категорию
+            </a>
+        </div>
+    </div>
+{% endif %}
+{% endblock %}

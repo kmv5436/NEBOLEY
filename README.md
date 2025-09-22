@@ -13,6 +13,9 @@ source myshop_venv/bin/activate
 # Установка зависимостей
 pip install -r requirements.txt
 
+# Создать миграции
+python manage.py makemigrations
+
 # Применение миграций
 python manage.py migrate
 
