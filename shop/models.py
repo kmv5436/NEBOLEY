@@ -434,4 +434,123 @@ class ProductReview(models.Model):
     def __str__(self):
         return _('Отзыв от {} для {}').format(self.author_name, self.product.name)
     
-    
+class Order(models.Model):
+    """     Модель заказа    """
+    STATUS_CHOICES = [
+        ('new', _('Новый')),
+        ('processing', _('В обработке')),
+        ('shipped', _('Отправлен')),
+        ('delivered', _('Доставлен')),
+        ('cancelled', _('Отменен')),
+    ]
+
+    # Информация о клиенте
+    customer_name = models.CharField(
+        max_length=100,
+        verbose_name=_('Имя клиента')
+    )
+    customer_email = models.EmailField(
+        verbose_name=_('Email клиента')
+    )
+    customer_phone = models.CharField(
+        max_length=20,
+        verbose_name=_('Телефон клиента')
+    )
+    customer_address = models.TextField(
+        verbose_name=_('Адрес доставки')
+    )
+    customer_comment = models.TextField(
+        blank=True,
+        null=True,
+        verbose_name=_('Комментарий клиента')
+    )
+
+    # Информация о заказе
+    total_amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_('Общая сумма')
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='new',
+        verbose_name=_('Статус заказа')
+    )
+    order_number = models.CharField(
+        max_length=20,
+        unique=True,
+        verbose_name=_('Номер заказа')
+    )
+
+    # Даты
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name=_('Дата создания')
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name=_('Дата обновления')
+    )
+
+    class Meta:
+        verbose_name = _('Заказ')
+        verbose_name_plural = _('Заказы')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"Заказ #{self.order_number} - {self.customer_name}"
+
+    def save(self, *args, **kwargs):
+        if not self.order_number:
+            # Генерируем номер заказа
+            import random
+            import string
+            from datetime import datetime
+            
+            date_part = datetime.now().strftime('%Y%m%d')
+            random_part = ''.join(random.choices(string.digits, k=6))
+            self.order_number = f"{date_part}{random_part}"
+        
+        super().save(*args, **kwargs)
+
+
+class OrderItem(models.Model):
+    """
+    Модель товара в заказе
+    """
+    order = models.ForeignKey(
+        Order,
+        on_delete=models.CASCADE,
+        related_name='items',
+        verbose_name=_('Заказ')
+    )
+    product = models.ForeignKey(
+        Product,
+        on_delete=models.CASCADE,
+        verbose_name=_('Товар')
+    )
+    product_size = models.ForeignKey(
+        ProductSize,
+        on_delete=models.CASCADE,
+        verbose_name=_('Размер товара')
+    )
+    quantity = models.PositiveIntegerField(
+        verbose_name=_('Количество')
+    )
+    price = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        verbose_name=_('Цена за единицу')
+    )
+
+    class Meta:
+        verbose_name = _('Товар в заказе')
+        verbose_name_plural = _('Товары в заказе')
+
+    def __str__(self):
+        return f"{self.product.name} - {self.product_size.size.name}"
+
+    @property
+    def total_price(self):
+        return self.price * self.quantity

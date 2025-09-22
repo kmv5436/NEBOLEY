@@ -33,7 +33,6 @@
             <h3><a href="{% url 'shop:product_detail' product.slug %}">{{ product.name }}</a></h3>
             
             <p>Категория: {{ product.category.name }}</p>
-            <p>Размер: {{ product.get_size_display }}</p>
             
             <div class="price">
                 {% if product.old_price %}
@@ -42,7 +41,17 @@
                 <span>{{ product.get_price_display }}</span>
             </div>
             
-            <p>{% if product.in_stock %}✅ В наличии{% else %}❌ Нет в наличии{% endif %}</p>
+            <!-- Исправленное отображение наличия -->
+            <p>
+                {% if product.has_stock %}
+                    ✅ В наличии 
+                    {% if product.total_stock > 0 %}
+                        ({{ product.total_stock }} шт.)
+                    {% endif %}
+                {% else %}
+                    ❌ Нет в наличии
+                {% endif %}
+            </p>
             
             {% if product.is_on_sale %}
             <div style="background: #ff6b6b; color: white; padding: 5px; border-radius: 3px; margin: 5px 0; text-align: center; font-size: 12px;">

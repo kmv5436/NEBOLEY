@@ -2,6 +2,41 @@ from django.contrib import admin
 from django.utils.translation import gettext_lazy as _
 from django.db import models
 from .models import Category, Product, ProductImage, ProductReview, Size, ProductSize
+from .models import Order, OrderItem
+
+class OrderItemInline(admin.TabularInline):
+    model = OrderItem
+    extra = 0
+    readonly_fields = ['product', 'product_size', 'quantity', 'price']
+    can_delete = False
+
+@admin.register(Order)
+class OrderAdmin(admin.ModelAdmin):
+    list_display = ['order_number', 'customer_name', 'total_amount', 'status', 'created_at']
+    list_filter = ['status', 'created_at']
+    search_fields = ['order_number', 'customer_name', 'customer_email']
+    readonly_fields = ['order_number', 'created_at', 'updated_at']
+    inlines = [OrderItemInline]
+    list_editable = ['status']
+    
+    fieldsets = (
+        ('Информация о заказе', {
+            'fields': ('order_number', 'total_amount', 'status')
+        }),
+        ('Информация о клиенте', {
+            'fields': ('customer_name', 'customer_email', 'customer_phone', 'customer_address', 'customer_comment')
+        }),
+        ('Даты', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+@admin.register(OrderItem)
+class OrderItemAdmin(admin.ModelAdmin):
+    list_display = ['order', 'product', 'product_size', 'quantity', 'price']
+    list_filter = ['order__status']
+    search_fields = ['order__order_number', 'product__name']
 
 
 class ProductSizeInline(admin.TabularInline):

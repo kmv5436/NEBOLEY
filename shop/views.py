@@ -4,6 +4,10 @@ from django.db.models import Q, Exists, OuterRef, Sum
 from django.utils.translation import gettext_lazy as _
 from django.contrib import messages
 from decimal import Decimal
+from django.core.mail import send_mail
+from django.conf import settings
+from .forms import OrderForm
+from .models import Order, OrderItem
 from .models import Product, Category, ProductSize, Size
 
 # ... остальные импорты и функции ...
@@ -192,6 +196,135 @@ def remove_from_cart(request, item_index):
         messages.error(request, 'Ошибка при удалении товара')
     
     return redirect('shop:cart')
+
+def checkout(request):
+    """
+    Оформление заказа
+    """
+    cart = get_cart(request)
+    
+    if not cart['items']:
+        messages.error(request, 'Корзина пуста')
+        return redirect('shop:cart')
+    
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            try:
+                # Создаем заказ
+                order = form.save(commit=False)
+                order.total_amount = Decimal(cart['total'])
+                order.save()
+                
+                # Создаем товары в заказе
+                for item in cart['items']:
+                    product = Product.objects.get(id=item['product_id'])
+                    product_size = ProductSize.objects.get(id=item['size_id'])
+                    
+                    OrderItem.objects.create(
+                        order=order,
+                        product=product,
+                        product_size=product_size,
+                        quantity=item['quantity'],
+                        price=Decimal(item['price'])
+                    )
+                
+                # Отправляем email администратору
+                send_order_notification(order)
+                
+                # Очищаем корзину
+                clear_cart(request)
+                
+                messages.success(request, f'Заказ #{order.order_number} успешно оформлен!')
+                return redirect('shop:order_success', order_id=order.id)
+                
+            except Exception as e:
+                messages.error(request, f'Ошибка при оформлении заказа: {str(e)}')
+    else:
+        form = OrderForm()
+    
+    # Получаем информацию о товарах для отображения
+    cart_items = []
+    for item in cart['items']:
+        try:
+            product = Product.objects.get(id=item['product_id'])
+            product_size = ProductSize.objects.get(id=item['size_id'])
+            
+            cart_items.append({
+                'product': product,
+                'product_size': product_size,
+                'quantity': item['quantity'],
+                'price': Decimal(item['price']),
+                'total': Decimal(item['price']) * item['quantity']
+            })
+        except (Product.DoesNotExist, ProductSize.DoesNotExist):
+            continue
+    
+    context = {
+        'form': form,
+        'cart_items': cart_items,
+        'cart_total': Decimal(cart['total']),
+        'page_title': 'Оформление заказа'
+    }
+    
+    return render(request, 'shop/checkout.html', context)
+
+def order_success(request, order_id):
+    """
+    Страница успешного оформления заказа
+    """
+    order = get_object_or_404(Order, id=order_id)
+    
+    context = {
+        'order': order,
+        'page_title': 'Заказ оформлен'
+    }
+    
+    return render(request, 'shop/order_success.html', context)
+
+def send_order_notification(order):
+    """
+    Отправка уведомления администратору о новом заказе
+    """
+    subject = f'Новый заказ #{order.order_number}'
+    
+    # Формируем содержимое письма
+    message = f"""
+    Поступил новый заказ!
+    
+    Номер заказа: #{order.order_number}
+    Дата: {order.created_at.strftime('%d.%m.%Y %H:%M')}
+    
+    Информация о клиенте:
+    Имя: {order.customer_name}
+    Email: {order.customer_email}
+    Телефон: {order.customer_phone}
+    Адрес: {order.customer_address}
+    {f'Комментарий: {order.customer_comment}' if order.customer_comment else ''}
+    
+    Состав заказа:
+    """
+    
+    for item in order.items.all():
+        message += f"\n- {item.product.name} ({item.product_size.size.name})"
+        message += f" - {item.quantity} шт. x {item.price} ₽ = {item.total_price} ₽"
+    
+    message += f"\n\nОбщая сумма: {order.total_amount} ₽"
+    message += f"\n\nСсылка на заказ в админке: http://127.0.0.1:8000/admin/shop/order/{order.id}/"
+    
+    # Отправляем email администратору
+    try:
+        send_mail(
+            subject,
+            message,
+            settings.DEFAULT_FROM_EMAIL,
+            [settings.ADMIN_EMAIL],  # Email администратора
+            fail_silently=False,
+        )
+    except Exception as e:
+        # Логируем ошибку, но не прерываем выполнение
+        print(f"Ошибка отправки email: {e}")
+
 
 def clear_cart(request):
     """
@@ -471,20 +604,25 @@ def new_arrivals(request):
     """
     from datetime import datetime, timedelta
     
-    # Создаем подзапрос для проверки наличия товара
-    in_stock_subquery = ProductSize.objects.filter(
-        product=OuterRef('pk'),
-        in_stock=True
-    )
-    
     # Товары, добавленные за последние 30 дней
     thirty_days_ago = datetime.now() - timedelta(days=30)
+    
+    # Получаем все новые товары (без фильтра по наличию размеров)
     products = Product.objects.filter(
         is_active=True,
         created_at__gte=thirty_days_ago
-    ).annotate(
-        has_stock=Exists(in_stock_subquery)
-    ).filter(has_stock=True).order_by('-created_at')
+    ).order_by('-created_at')
+    
+    # Добавляем информацию о наличии для каждого товара
+    for product in products:
+        # Проверяем, есть ли у товара размеры в наличии
+        available_sizes = product.product_sizes.filter(in_stock=True)
+        product.has_stock = available_sizes.exists()
+        product.available_sizes_count = available_sizes.count()
+        
+        # Получаем общее количество на складе (используем Sum из django.db.models)
+        total_stock = product.product_sizes.aggregate(total=Sum('stock_quantity'))['total'] or 0
+        product.total_stock = total_stock
     
     context = {
         'products': products,

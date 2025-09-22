@@ -68,10 +68,10 @@
                 <a href="{% url 'shop:product_list' %}" class="continue-shopping">
                     ← Продолжить покупки
                 </a>
-                
-                <button class="checkout-btn" onclick="alert('Оформление заказа находится в разработке')">
+                <a href="{% url 'shop:checkout' %}" class="checkout-btn">
                     🛒 Оформить заказ
-                </button>
+                </a>
+
             </div>
         </div>
     </div>

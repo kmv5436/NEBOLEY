@@ -1,0 +1,141 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Заказ оформлен - Магазин товаров{% endblock %}
+{% block header %}✅ Заказ успешно оформлен{% endblock %}
+
+{% block content %}
+<div class="success-container">
+    <div class="success-card">
+        <div class="success-icon">🎉</div>
+        <h2>Спасибо за ваш заказ!</h2>
+        
+        <div class="order-info">
+            <p><strong>Номер заказа:</strong> #{{ order.order_number }}</p>
+            <p><strong>Дата заказа:</strong> {{ order.created_at|date:"d.m.Y H:i" }}</p>
+            <p><strong>Сумма заказа:</strong> {{ order.total_amount|floatformat:2 }} ₽</p>
+            <p><strong>Статус:</strong> {{ order.get_status_display }}</p>
+        </div>
+        
+        <div class="customer-info">
+            <h3>Информация о доставке</h3>
+            <p><strong>Получатель:</strong> {{ order.customer_name }}</p>
+            <p><strong>Телефон:</strong> {{ order.customer_phone }}</p>
+            <p><strong>Email:</strong> {{ order.customer_email }}</p>
+            <p><strong>Адрес:</strong> {{ order.customer_address }}</p>
+            {% if order.customer_comment %}
+            <p><strong>Комментарий:</strong> {{ order.customer_comment }}</p>
+            {% endif %}
+        </div>
+        
+        <div class="success-actions">
+            <a href="{% url 'shop:product_list' %}" class="continue-shopping">
+                🏠 Вернуться в магазин
+            </a>
+            <button onclick="window.print()" class="print-btn">
+                🖨️ Распечатать заказ
+            </button>
+        </div>
+        
+        <div class="support-info">
+            <p>📞 По вопросам заказа звоните: +7 (999) 123-45-67</p>
+            <p>✉️ Или пишите на: info@magazin-tovarov.ru</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.success-container {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.success-card {
+    background: white;
+    padding: 2rem;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    text-align: center;
+}
+
+.success-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.success-card h2 {
+    color: var(--success-color);
+    margin-bottom: 1.5rem;
+}
+
+.order-info, .customer-info {
+    text-align: left;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--light-bg);
+    border-radius: var(--border-radius);
+}
+
+.order-info p, .customer-info p {
+    margin-bottom: 0.5rem;
+}
+
+.success-actions {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+}
+
+.continue-shopping {
+    background: var(--secondary-color);
+    color: white;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.continue-shopping:hover {
+    background: #2980b9;
+    color: white;
+}
+
+.print-btn {
+    background: #6c757d;
+    color: white;
+    border: none;
+    padding: 0.75rem 1.5rem;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.print-btn:hover {
+    background: #5a6268;
+}
+
+.support-info {
+    border-top: 1px solid #e0e0e0;
+    padding-top: 1.5rem;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .success-actions {
+        flex-direction: column;
+    }
+    
+    .continue-shopping, .print-btn {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media print {
+    .success-actions, .support-info {
+        display: none;
+    }
+}
+</style>
+{% endblock %}

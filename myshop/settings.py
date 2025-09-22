@@ -143,3 +143,21 @@ LOCALE_PATHS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
+# Настройки email для уведомлений
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Для разработки - вывод в консоль
+# Для продакшена используйте:
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.yandex.ru'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'your-email@yandex.ru'
+# EMAIL_HOST_PASSWORD = 'your-password'
+
+DEFAULT_FROM_EMAIL = 'noreply@magazin-tovarov.ru'
+ADMIN_EMAIL = 'mirumir5436@yandex.ru'  # Замените на реальный email администратора
+
+# Или для нескольких администраторов:
+ADMINS = [
+    ('Admin', 'admin@magazin-tovarov.ru'),
+]
+
