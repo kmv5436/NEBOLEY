@@ -68,6 +68,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'shop.context_processors.cart_context',
             ],
         },
     },
@@ -161,3 +162,4 @@ ADMINS = [
     ('Admin', 'admin@magazin-tovarov.ru'),
 ]
 
+ADMIN_SITE_HEADER = "Панель администратора NEBOLEY"
