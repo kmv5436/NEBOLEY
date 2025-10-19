@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    {% load static %}
+    <link rel="icon" href="{% static 'favicon.ico' %}">
     <title>{% block title %}Магазин товаров NEBOLEY{% endblock %}</title>
     <style>
         :root {
@@ -487,16 +489,17 @@
                         <li><a href="{% url 'shop:category_list' %}">Категории</a></li>
                         <li><a href="{% url 'shop:featured_products' %}">Рекомендуемые</a></li>
                         <li><a href="{% url 'shop:new_arrivals' %}">Новинки</a></li>
+                        <li><a href="{% url 'shop:user_agreement' %}">Пользовательское соглашение</a></li>
+                        <li><a href="{% url 'shop:privacy_policy' %}">Политика конфиденциальности</a></li>
                     </ul>
                 </div>
 
                 <div class="footer-section">
                     <h3>Помощь</h3>
                     <ul class="footer-links">
-                        <li><a href="#">Доставка и оплата</a></li>
-                        <li><a href="#">Возврат товара</a></li>
-                        <li><a href="#">Частые вопросы</a></li>
-                        <li><a href="#">Контакты</a></li>
+                        <li><a href="{% url 'shop:return_info' %}">Возврат товара</a></li>
+                        <li><a href="{% url 'shop:payment_info' %}">Способы оплаты</a></li>
+                        <li><a href="{% url 'shop:delivery_info' %}">Доставка</a></li>
                     </ul>
                 </div>
 
@@ -524,10 +527,8 @@
     <script>
     // Обновление количества товаров в корзине
     function updateCartCount() {
-        // Используем значение из Django контекста как fallback
         const cartCountElement = document.querySelector('.cart-count');
         if (cartCountElement) {
-            // Можно обновлять из sessionStorage при изменениях
             try {
                 const cartData = sessionStorage.getItem('django_cart');
                 if (cartData) {
@@ -535,7 +536,6 @@
                     const dynamicCount = cart.items ? cart.items.length : 0;
                     cartCountElement.textContent = `(${dynamicCount})`;
                 }
-                // Если sessionStorage пуст, остаётся значение из Django
             } catch (e) {
                 console.error('Error updating cart count:', e);
             }
@@ -546,16 +546,10 @@
     document.addEventListener('DOMContentLoaded', function() {
         updateCartCount();
     
-        // Слушаем события изменения корзины (можно вызывать после AJAX запросов)
+        // Слушаем события изменения корзины
         document.addEventListener('cartUpdated', function() {
             updateCartCount();
         });
-    });
-
-// Функция для вызова после добавления/удаления товаров
-function notifyCartUpdate() {
-    document.dispatchEvent(new Event('cartUpdated'));
-}
 
         // Плавная прокрутка для якорей
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
@@ -596,6 +590,11 @@ function notifyCartUpdate() {
         window.addEventListener('scroll', animateOnScroll);
         animateOnScroll(); // Первоначальный вызов
     });
+
+    // Функция для вызова после добавления/удаления товаров
+    function notifyCartUpdate() {
+        document.dispatchEvent(new Event('cartUpdated'));
+    }
     </script>
 </body>
 </html>

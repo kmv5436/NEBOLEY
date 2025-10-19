@@ -19,5 +19,13 @@ urlpatterns = [
     path('cart/clear/', views.clear_cart, name='clear_cart'),
     path('checkout/', views.checkout, name='checkout'),
     path('order/success/<int:order_id>/', views.order_success, name='order_success'),
+    path('delivery/', views.delivery_info, name='delivery_info'),
+    path('returns/', views.return_info, name='return_info'),
+    path('privacy/', views.privacy_policy, name='privacy_policy'),
+    path('agreement/', views.user_agreement, name='user_agreement'),
+    path('faq/', views.faq, name='faq'),
+    path('contacts/', views.contacts, name='contacts'),
+    path('about/', views.about, name='about'),
+    path('payment/', views.payment_info, name='payment_info'),
 ]
 

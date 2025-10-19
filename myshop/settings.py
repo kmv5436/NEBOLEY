@@ -9,25 +9,73 @@ https://docs.djangoproject.com/en/5.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
-
-import os
 from pathlib import Path
+import time
+import os
+from django.core.exceptions import ImproperlyConfigured
+
+# Установка временной зоны
+if not os.environ.get('TZ'):
+    os.environ['TZ'] = 'Europe/Moscow'
+    try:
+        time.tzset()
+    except AttributeError:
+        pass  # На Windows не работает
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Загрузка .env файла для разработки
+from dotenv import load_dotenv
+load_dotenv(BASE_DIR / '.env')
 
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-b5)82z$4(2-npw66)p6fzrc%d1a41cx+2+v-)2(9yv%7@=w1p4'
+# Безопасное получение SECRET_KEY
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
+
+# Автоматическое определение по домену (дополнительная проверка)
+import socket
+if DEBUG and socket.gethostname().endswith('.pythonanywhere.com'):
+    DEBUG = False
+    print("⚠️  Автоматически отключен DEBUG на PythonAnywhere")
+
+# Теперь проверяем SECRET_KEY после определения DEBUG
+if not SECRET_KEY:
+    if DEBUG:
+        # Только для разработки - предупреждение
+        SECRET_KEY = 'django-insecure-dev-key-only-' + os.urandom(32).hex()
+        print("⚠️  ВНИМАНИЕ: Используется временный ключ для разработки!")
+    else:
+        # В ПРОДАКШЕНЕ - ОШИБКА
+        raise ImproperlyConfigured("SECRET_KEY not set in production environment!")
+    
+# Настройки безопасности для продакшена
+if not DEBUG:
+    # Безопасные настройки
+    SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_BROWSER_XSS_FILTER = True
+    SECURE_CONTENT_TYPE_NOSNIFF = True    
 
 ALLOWED_HOSTS = []
 
+if DEBUG:
+    # Хосты для разработки
+    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+else:
+    # Хосты для продакшена (PythonAnywhere)
+    ALLOWED_HOSTS = [
+        'neboley.pythonanywhere.com',
+        'www.neboley.pythonanywhere.com',
+    ]
 
 # Application definition
 
@@ -110,7 +158,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru-RU'
+LANGUAGE_CODE = 'ru-ru'
 
 TIME_ZONE = 'Europe/Moscow'
 
@@ -120,11 +168,28 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Принудительная установка временной зоны для Python
+os.environ['TZ'] = 'Europe/Moscow'
+try:
+    time.tzset()
+except:
+    pass  # На Windows может не работать
+
+# Для Django
+# from django.utils import timezone
+# timezone.activate(timezone.pytz.timezone('Europe/Moscow'))
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+# Для разработки
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Для продакшн
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -144,22 +209,40 @@ LOCALE_PATHS = [
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Настройки email для уведомлений
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Для разработки - вывод в консоль
-# Для продакшена используйте:
-# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-# EMAIL_HOST = 'smtp.yandex.ru'
-# EMAIL_PORT = 587
-# EMAIL_USE_TLS = True
-# EMAIL_HOST_USER = 'your-email@yandex.ru'
-# EMAIL_HOST_PASSWORD = 'your-password'
 
-DEFAULT_FROM_EMAIL = 'noreply@magazin-tovarov.ru'
-ADMIN_EMAIL = 'mirumir5436@yandex.ru'  # Замените на реальный email администратора
+# Настройки email для уведомлений
+# EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Для разработки - вывод в консоль
+# Для продакшена используйте:
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.yandex.ru'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'neboleyy@yandex.ru'
+EMAIL_HOST_PASSWORD = 'meagukroxpdkslhh'
+SERVER_EMAIL = 'neboleyy@yandex.ru'
+DEFAULT_FROM_EMAIL = 'neboleyy@yandex.ru'
+
+ADMIN_EMAIL = 'neboleyy@yandex.ru'  # Замените на реальный email администратора
 
 # Или для нескольких администраторов:
 ADMINS = [
-    ('Admin', 'admin@magazin-tovarov.ru'),
+    ('Admin', 'neboleyy@yandex.ru'),
 ]
 
 ADMIN_SITE_HEADER = "Панель администратора NEBOLEY"
+
+# Принудительная установка русского языка
+from django.utils.translation import gettext_lazy as _
+
+# Принудительно активируем русский язык
+import locale
+try:
+    locale.setlocale(locale.LC_ALL, 'ru_RU.UTF-8')
+except:
+    try:
+        locale.setlocale(locale.LC_ALL, 'Russian_Russia.1251')
+    except:
+        pass
+
+# Для админки
+ADMIN_LANGUAGE_CODE = 'ru'

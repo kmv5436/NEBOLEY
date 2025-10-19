@@ -29,7 +29,7 @@
 
         <div class="checkout-form">
             <h3>Контактная информация</h3>
-            <form method="post" class="order-form">
+            <form method="post" class="order-form" id="order-form">
                 {% csrf_token %}
                 
                 <div class="form-group">
@@ -69,9 +69,32 @@
                     {{ form.customer_comment }}
                 </div>
                 
+                <!-- Чекбокс согласия -->
+                <!-- Замените блок terms-group на этот: -->
+                <div class="form-group terms-group">
+                    <div class="checkbox-wrapper">
+                        {{ form.agree_to_terms }}
+                        <label for="{{ form.agree_to_terms.id_for_label }}" class="terms-label">
+                            Я согласен с условиями:
+                        </label>
+                    </div>
+                    {% if form.agree_to_terms.errors %}
+                        <div class="error">{{ form.agree_to_terms.errors }}</div>
+                    {% endif %}
+                    <small class="terms-hint">
+                        Нажимая на кнопку "Подтвердить заказ", вы соглашаетесь с:
+                        <ul class="terms-links">
+                            <li><a href="{% url 'shop:user_agreement' %}" target="_blank">Пользовательским соглашением</a></li>
+                            <li><a href="{% url 'shop:privacy_policy' %}" target="_blank">Политикой конфиденциальности</a></li>
+                            <li><a href="{% url 'shop:return_info' %}" target="_blank">Политикой возврата</a></li>
+                        </ul>
+                        В соответствии с Федеральным законом № 152-ФЗ «О персональных данных» и Законом РФ «О защите прав потребителей»
+                    </small>
+                </div>
+                
                 <div class="form-actions">
                     <a href="{% url 'shop:cart' %}" class="back-btn">← Вернуться в корзину</a>
-                    <button type="submit" class="submit-order-btn">✅ Подтвердить заказ</button>
+                    <button type="submit" class="submit-order-btn" id="submit-order-btn">✅ Подтвердить заказ</button>
                 </div>
             </form>
         </div>
@@ -176,6 +199,50 @@
     margin-top: 0.25rem;
 }
 
+/* Стили для чекбокса согласия */
+.terms-group {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    border: 1px solid #e9ecef;
+}
+
+.checkbox-wrapper {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    margin-top: 0.25rem;
+    cursor: pointer;
+}
+
+.terms-label {
+    font-weight: 500;
+    color: var(--primary-color);
+    cursor: pointer;
+    line-height: 1.4;
+}
+
+.terms-hint {
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.terms-hint a {
+    color: var(--secondary-color);
+    text-decoration: none;
+}
+
+.terms-hint a:hover {
+    text-decoration: underline;
+}
+
 .form-actions {
     display: flex;
     justify-content: space-between;
@@ -214,6 +281,31 @@
     transform: scale(1.05);
 }
 
+.submit-order-btn:disabled {
+    background: #6c757d;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.terms-links {
+    margin: 0.5rem 0;
+    padding-left: 1.5rem;
+}
+
+.terms-links li {
+    margin-bottom: 0.25rem;
+}
+
+.terms-links a {
+    color: var(--secondary-color);
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.terms-links a:hover {
+    text-decoration: underline;
+}
+
 @media (max-width: 768px) {
     .checkout-content {
         grid-template-columns: 1fr;
@@ -228,6 +320,42 @@
         width: 100%;
         text-align: center;
     }
+    
+    .checkbox-wrapper {
+        align-items: flex-start;
+    }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('order-form');
+    const agreeCheckbox = document.querySelector('input[name="agree_to_terms"]');
+    const submitBtn = document.getElementById('submit-order-btn');
+    
+    // Функция для проверки состояния чекбокса
+    function checkAgreement() {
+        if (agreeCheckbox.checked) {
+            submitBtn.disabled = false;
+        } else {
+            submitBtn.disabled = true;
+        }
+    }
+    
+    // Проверяем при загрузке страницы
+    checkAgreement();
+    
+    // Проверяем при изменении состояния чекбокса
+    agreeCheckbox.addEventListener('change', checkAgreement);
+    
+    // Обработка отправки формы
+    form.addEventListener('submit', function(e) {
+        if (!agreeCheckbox.checked) {
+            e.preventDefault();
+            alert('Пожалуйста, согласитесь с условиями перед оформлением заказа');
+            return false;
+        }
+    });
+});
+</script>
 {% endblock %}

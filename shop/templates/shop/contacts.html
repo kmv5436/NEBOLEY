@@ -1,0 +1,166 @@
+{% extends "shop/base.html" %}
+
+{% block title %}Контакты - Магазин товаров NEBOLEY{% endblock %}
+{% block header %}📞 Контакты{% endblock %}
+
+{% block content %}
+<div class="info-container">
+    <div class="info-content">
+        
+        <!-- Сообщения об успехе/ошибках -->
+        {% if messages %}
+        <div class="messages-container">
+            {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}success{% endif %}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="contacts-grid">
+            <div class="contact-info">
+                <h3>Контактная информация</h3>
+                
+                <div class="contact-item">
+                    <h4>📞 Телефон</h4>
+                    <p>+7 (993) 450-91-31</p>
+                    <small>Ежедневно с 9:00 до 21:00</small>
+                </div>
+
+                <div class="contact-item">
+                    <h4>✉️ Email</h4>
+                    <p>neboleyy@yandex.ru</p>
+                    <small>Отвечаем в течение 2 часов</small>
+                </div>
+
+                <div class="contact-item">
+                    <h4>🏢 Адрес</h4>
+                    <p>г. Ростов-на-Дону</p>
+                    <small>Пн-Пт с 9:00 до 18:00</small>
+                </div>
+
+                <div class="contact-item">
+                    <h4>⏰ Время работы</h4>
+                    <p>Понедельник - Пятница: 9:00 - 18:00</p>
+                    <p>Суббота - Воскресенье: 10:00 - 16:00</p>
+                </div>
+            </div>
+
+            <div class="contact-form">
+                <h3>Напишите нам</h3>
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <input type="text" name="name" placeholder="Ваше имя" required class="form-input" value="{{ request.POST.name }}">
+                    </div>
+                    <div class="form-group">
+                        <input type="email" name="email" placeholder="Ваш email" required class="form-input" value="{{ request.POST.email }}">
+                    </div>
+                    <div class="form-group">
+                        <textarea name="message" placeholder="Ваше сообщение" rows="5" required class="form-textarea">{{ request.POST.message }}</textarea>
+                    </div>
+                    <button type="submit" class="submit-btn">Отправить сообщение</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.contacts-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+.contact-item {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+}
+
+.contact-item h4 {
+    color: var(--primary-color);
+    margin-bottom: 0.5rem;
+}
+
+.contact-item p {
+    font-size: 1.1rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+}
+
+.contact-item small {
+    color: #666;
+}
+
+.contact-form {
+    background: #f8f9fa;
+    padding: 1.5rem;
+    border-radius: var(--border-radius);
+}
+
+.form-input, .form-textarea {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: var(--border-radius);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.form-input:focus, .form-textarea:focus {
+    outline: none;
+    border-color: var(--secondary-color);
+    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.submit-btn {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 1rem 2rem;
+    border-radius: var(--border-radius);
+    font-size: 1.1rem;
+    cursor: pointer;
+    width: 100%;
+    transition: var(--transition);
+}
+
+.submit-btn:hover {
+    background: #2980b9;
+}
+
+/* Стили для сообщений */
+.messages-container {
+    margin-bottom: 2rem;
+}
+
+.alert {
+    padding: 1rem;
+    border-radius: var(--border-radius);
+    margin-bottom: 1rem;
+    border: 1px solid transparent;
+}
+
+.alert-success {
+    background: #d4edda;
+    color: #155724;
+    border-color: #c3e6cb;
+}
+
+.alert-danger {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #f5c6cb;
+}
+
+@media (max-width: 768px) {
+    .contacts-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+{% endblock %}

@@ -6,9 +6,12 @@ from django.contrib import messages
 from decimal import Decimal
 from django.core.mail import send_mail
 from django.conf import settings
+from django.utils import timezone
+from django.utils.dateformat import format
 from .forms import OrderForm
 from .models import Order, OrderItem
 from .models import Product, Category, ProductSize, Size
+import pytz
 
 # ... остальные импорты и функции ...
 
@@ -197,6 +200,7 @@ def remove_from_cart(request, item_index):
     
     return redirect('shop:cart')
 
+
 def checkout(request):
     """
     Оформление заказа
@@ -210,36 +214,44 @@ def checkout(request):
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            try:
-                # Создаем заказ
-                order = form.save(commit=False)
-                order.total_amount = Decimal(cart['total'])
-                order.save()
-                
-                # Создаем товары в заказе
-                for item in cart['items']:
-                    product = Product.objects.get(id=item['product_id'])
-                    product_size = ProductSize.objects.get(id=item['size_id'])
+            # Проверяем согласие с условиями
+            if not form.cleaned_data.get('agree_to_terms'):
+                messages.error(request, 'Вы должны согласиться с условиями перед оформлением заказа')
+            else:
+                try:
+                    # Создаем заказ
+                    order = form.save(commit=False)
+                    order.total_amount = Decimal(cart['total'])
+                    order.agreed_to_terms = True  # сохраняем согласие
+                    order.save()
                     
-                    OrderItem.objects.create(
-                        order=order,
-                        product=product,
-                        product_size=product_size,
-                        quantity=item['quantity'],
-                        price=Decimal(item['price'])
-                    )
-                
-                # Отправляем email администратору
-                send_order_notification(order)
-                
-                # Очищаем корзину
-                clear_cart(request)
-                
-                messages.success(request, f'Заказ #{order.order_number} успешно оформлен!')
-                return redirect('shop:order_success', order_id=order.id)
-                
-            except Exception as e:
-                messages.error(request, f'Ошибка при оформлении заказа: {str(e)}')
+                    # Создаем товары в заказе
+                    for item in cart['items']:
+                        product = Product.objects.get(id=item['product_id'])
+                        product_size = ProductSize.objects.get(id=item['size_id'])
+                        
+                        OrderItem.objects.create(
+                            order=order,
+                            product=product,
+                            product_size=product_size,
+                            quantity=item['quantity'],
+                            price=Decimal(item['price'])
+                        )
+                    
+                    # Отправляем email администратору
+                    send_order_notification(order)
+                    
+                    # Очищаем корзину
+                    clear_cart(request)
+                    
+                    messages.success(request, f'Заказ #{order.order_number} успешно оформлен!')
+                    return redirect('shop:order_success', order_id=order.id)
+                    
+                except Exception as e:
+                    messages.error(request, f'Ошибка при оформлении заказа: {str(e)}')
+        else:
+            # Если форма невалидна, показываем ошибки
+            messages.error(request, 'Пожалуйста, исправьте ошибки в форме')
     else:
         form = OrderForm()
     
@@ -286,14 +298,38 @@ def send_order_notification(order):
     """
     Отправка уведомления администратору о новом заказе
     """
+    
+     # ПРИНУДИТЕЛЬНАЯ конвертация в московское время
+    # Создаем московскую временную зону
+    moscow_tz = pytz.timezone('Europe/Moscow')
+    
+    # Если время наивное (без временной зоны), сначала делаем его aware
+    if timezone.is_naive(order.created_at):
+        # Предполагаем что наивное время в UTC
+        utc_time = timezone.make_aware(order.created_at, timezone=pytz.UTC)
+        moscow_time = utc_time.astimezone(moscow_tz)
+    else:
+        # Время уже aware, конвертируем в Москву
+        moscow_time = order.created_at.astimezone(moscow_tz)
+    
+    # Форматируем время
+    formatted_time = moscow_time.strftime('%d.%m.%Y %H:%M')
+    
     subject = f'Новый заказ #{order.order_number}'
     
-    # Формируем содержимое письма
     message = f"""
     Поступил новый заказ!
     
     Номер заказа: #{order.order_number}
-    Дата: {order.created_at.strftime('%d.%m.%Y %H:%M')}
+    Дата и время: {formatted_time} (МСК)
+    
+    Информация о клиенте:
+    Имя: {order.customer_name}
+    Email: {order.customer_email}
+    Телефон: {order.customer_phone}
+    Адрес: {order.customer_address}
+    {f'Комментарий: {order.customer_comment}' if order.customer_comment else ''}
+    
     
     Информация о клиенте:
     Имя: {order.customer_name}
@@ -631,4 +667,155 @@ def new_arrivals(request):
     }
     
     return render(request, 'shop/new_arrivals.html', context)
+
+def delivery_info(request):
+    """
+    Страница информации о доставке
+    """
+    context = {
+        'page_title': 'Доставка и оплата',
+    }
+    return render(request, 'shop/delivery_info.html', context)
+
+def return_info(request):
+    """
+    Страница информации о возврате
+    """
+    context = {
+        'page_title': 'Возврат товара',
+    }
+    return render(request, 'shop/return_info.html', context)
+
+def privacy_policy(request):
+    """
+    Политика конфиденциальности (обязательно для РФ)
+    """
+    context = {
+        'page_title': 'Политика конфиденциальности',
+    }
+    return render(request, 'shop/privacy_policy.html', context)
+
+def user_agreement(request):
+    """
+    Пользовательское соглашение (обязательно для РФ)
+    """
+    context = {
+        'page_title': 'Пользовательское соглашение',
+    }
+    return render(request, 'shop/user_agreement.html', context)
+
+def payment_info(request):
+    """
+    Информация о способах оплаты
+    """
+    context = {
+        'page_title': 'Способы оплаты',
+    }
+    return render(request, 'shop/payment_info.html', context)
+
+def about(request):
+    """
+    О компании
+    """
+    context = {
+        'page_title': 'О компании',
+    }
+    return render(request, 'shop/about.html', context)
+
+def faq(request):
+    """
+    Страница часто задаваемых вопросов
+    """
+    context = {
+        'page_title': 'Частые вопросы',
+    }
+    return render(request, 'shop/faq.html', context)
+
+def contacts(request):
+    """
+    Страница контактов с формой обратной связи
+    """
+    if request.method == 'POST':
+        # Получаем данные из формы
+        name = request.POST.get('name', '').strip()
+        email = request.POST.get('email', '').strip()
+        message = request.POST.get('message', '').strip()
+        
+        # Валидация данных
+        errors = []
+        if not name:
+            errors.append('Введите ваше имя')
+        if not email:
+            errors.append('Введите ваш email')
+        elif '@' not in email:
+            errors.append('Введите корректный email')
+        if not message:
+            errors.append('Введите сообщение')
+        elif len(message) < 10:
+            errors.append('Сообщение должно содержать не менее 10 символов')
+        
+        if not errors:
+            try:
+                # Отправка email администратору
+                subject = f'Новое сообщение от {name}'
+                message_body = f"""
+                Поступило новое сообщение с сайта:
+                
+                Имя: {name}
+                Email: {email}
+                
+                Сообщение:
+                {message}
+                
+                Дата: {timezone.now().strftime("%d.%m.%Y %H:%M")}
+                """
+                
+                send_mail(
+                    subject,
+                    message_body,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [settings.ADMIN_EMAIL],  # Email администратора
+                    fail_silently=False,
+                )
+                
+                # Отправка подтверждения пользователю
+                user_subject = 'Ваше сообщение получено'
+                user_message = f"""
+                Уважаемый(ая) {name},
+                
+                Благодарим вас за обращение в наш магазин NEBOLEY!
+                
+                Мы получили ваше сообщение:
+                "{message}"
+                
+                Наша команда свяжется с вами в ближайшее время по email: {email}
+                
+                С уважением,
+                Команда NEBOLEY
+                """
+                
+                send_mail(
+                    user_subject,
+                    user_message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [email],
+                    fail_silently=False,
+                )
+                
+                messages.success(request, '✅ Ваше сообщение успешно отправлено! Мы ответим вам в ближайшее время.')
+                return redirect('shop:contacts')
+                
+            except Exception as e:
+                messages.error(request, f'❌ Произошла ошибка при отправке сообщения. Пожалуйста, попробуйте позже или свяжитесь по телефону.')
+                print(f"Ошибка отправки email: {e}")
+        else:
+            # Показываем ошибки валидации
+            for error in errors:
+                messages.error(request, error)
+    
+    context = {
+        'page_title': 'Контакты',
+    }
+    return render(request, 'shop/contacts.html', context)
+
 

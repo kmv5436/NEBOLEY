@@ -12,10 +12,11 @@ class OrderItemInline(admin.TabularInline):
 
 @admin.register(Order)
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ['order_number', 'customer_name', 'total_amount', 'status', 'created_at']
+    # Используем кастомное поле для отображения времени
+    list_display = ['order_number', 'customer_name', 'total_amount', 'status', 'created_at_moscow']
     list_filter = ['status', 'created_at']
     search_fields = ['order_number', 'customer_name', 'customer_email']
-    readonly_fields = ['order_number', 'created_at', 'updated_at']
+    readonly_fields = ['order_number', 'created_at_moscow', 'created_at_full', 'updated_at']
     inlines = [OrderItemInline]
     list_editable = ['status']
     
@@ -27,10 +28,13 @@ class OrderAdmin(admin.ModelAdmin):
             'fields': ('customer_name', 'customer_email', 'customer_phone', 'customer_address', 'customer_comment')
         }),
         ('Даты', {
-            'fields': ('created_at', 'updated_at'),
+            'fields': ('created_at_full', 'created_at_moscow', 'updated_at'),
             'classes': ('collapse',)
         }),
     )
+
+    # Добавляем сортировку по времени создания
+    ordering = ['-created_at']
 
 @admin.register(OrderItem)
 class OrderItemAdmin(admin.ModelAdmin):
@@ -277,3 +281,4 @@ class ProductReviewAdmin(admin.ModelAdmin):
 # УБЕДИТЕСЬ, ЧТО НЕТ ДУБЛИРУЮЩИХ РЕГИСТРАЦИЙ:
 # НЕТ: admin.site.register(Product, ProductAdmin)
 # НЕТ: admin.site.register(Product)
+

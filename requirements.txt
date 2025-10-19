@@ -1,4 +1,9 @@
 asgiref==3.9.1
 Django==5.2.6
+django-extensions
 pillow==11.3.0
 sqlparse==0.5.3
+psycopg2-binary==2.9.9
+whitenoise==6.6.0
+python-dotenv==1.0.1
+pytz==2025.2

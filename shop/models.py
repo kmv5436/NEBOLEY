@@ -2,6 +2,8 @@ from django.db import models
 from django.core.validators import MinValueValidator
 from decimal import Decimal
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import pytz
 
 
 class Size(models.Model):
@@ -492,6 +494,43 @@ class Order(models.Model):
         auto_now=True,
         verbose_name=_('Дата обновления')
     )
+
+    agreed_to_terms = models.BooleanField(
+        verbose_name='Согласие с условиями',
+        default=False
+    )
+
+    def created_at_moscow(self):
+        """Возвращает время создания в московском времени в формате ЧЧ:ММ"""
+        moscow_tz = pytz.timezone('Europe/Moscow')
+        
+        if timezone.is_naive(self.created_at):
+            # Если время наивное, считаем что оно в UTC
+            utc_time = timezone.make_aware(self.created_at, timezone=pytz.UTC)
+            moscow_time = utc_time.astimezone(moscow_tz)
+        else:
+            # Время уже aware, конвертируем в Москву
+            moscow_time = self.created_at.astimezone(moscow_tz)
+            
+        return moscow_time.strftime('%d.%m.%Y  %H:%M')
+    
+    created_at_moscow.short_description = 'Время (МСК)'
+    created_at_moscow.admin_order_field = 'created_at'
+    
+    def created_at_full(self):
+        """Полная дата и время в московском формате"""
+        moscow_tz = pytz.timezone('Europe/Moscow')
+        
+        if timezone.is_naive(self.created_at):
+            utc_time = timezone.make_aware(self.created_at, timezone=pytz.UTC)
+            moscow_time = utc_time.astimezone(moscow_tz)
+        else:
+            moscow_time = self.created_at.astimezone(moscow_tz)
+            
+        return moscow_time.strftime('%d.%m.%Y %H:%M')
+    
+    created_at_full.short_description = 'Дата и время создания'
+
 
     class Meta:
         verbose_name = _('Заказ')
