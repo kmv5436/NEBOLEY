@@ -218,7 +218,7 @@ EMAIL_HOST = 'smtp.yandex.ru'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'neboleyy@yandex.ru'
-EMAIL_HOST_PASSWORD = 'meagukroxpdkslhh'
+EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', '')
 SERVER_EMAIL = 'neboleyy@yandex.ru'
 DEFAULT_FROM_EMAIL = 'neboleyy@yandex.ru'
 
