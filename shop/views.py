@@ -557,7 +557,7 @@ def category_list(request):
     
     context = {
         'categories': categories,
-        'page_title': _('Категории товаров'),
+        'page_title': _('товаров'),
     }
     
     return render(request, 'shop/category_list.html', context)

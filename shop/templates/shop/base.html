@@ -1,10 +1,39 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    {% load static %}
+
+    <!--
     <link rel="icon" href="{% static 'favicon.ico' %}">
+    -->
+
+    <link rel="shortcut icon" type="image/x-icon" href="{% static 'favicon.ico' %}">
+
+    <!-- Основные мета-теги -->
+    <meta name="description" content="{% block meta_description %}Интернет-магазин NEBOLEY - качественные товары по доступным ценам. Быстрая доставка по России.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}интернет-магазин, товары, покупки, доставка, Россия{% endblock %}">
+
+    <!-- Open Graph для соцсетей -->
+    <meta property="og:title" content="{% block og_title %}Магазин товаров NEBOLEY{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}Лучшие товары по доступным ценам с быстрой доставкой{% endblock %}">
+    <meta property="og:image" content="{% block og_image %}{% static 'images/logo.png' %}{% endblock %}">
+    <meta property="og:url" content="{{ request.build_absolute_uri }}">
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="NEBOLEY">
+
+    <!-- Для Яндекс -->
+    <meta name="yandex-verification" content="ваш-код-верификации">
+
+    <!-- Для Google -->
+    <meta name="google-site-verification" content="ваш-код-верификации">
+    
+    <!-- Каноническая ссылка для избежания дублей -->
+    <link rel="canonical" href="https://neboleyy.pythonanywhere.com{{ request.path }}">
+    
+    
+
     <title>{% block title %}Магазин товаров NEBOLEY{% endblock %}</title>
     <style>
         :root {
@@ -451,9 +480,11 @@
                     <a href="{% url 'shop:cart' %}" class="cart-btn">
                         🛒 Корзина <span class="cart-count">({{ cart_count|default:0 }})</span>
                     </a>
-                    <a href="{% url 'admin:login' %}" class="login-btn">
+                    <!--
+                     <a href="{% url 'admin:login' %}" class="login-btn">
                         👤 Войти
                     </a>
+                    -->                   
                 </div>
             </div>
         </header>

@@ -1,5 +1,9 @@
 {% extends "shop/base.html" %}
 
+{% block extra_head %}
+<link rel="canonical" href="https://neboleyy.pythonanywhere.com{% url 'shop:product_detail' product.slug %}">
+{% endblock %}
+
 {% block title %}{{ product.name }} - Магазин товаров NEBOLEY{% endblock %}
 {% block header %}{{ product.name }}{% endblock %}
 

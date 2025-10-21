@@ -14,6 +14,14 @@ import time
 import os
 from django.core.exceptions import ImproperlyConfigured
 
+# Базовый URL для sitemap и других абсолютных ссылок
+SITE_URL = 'https://neboleyy.pythonanywhere.com'
+
+# Для корректной работы абсолютных URL
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # Установка временной зоны
 if not os.environ.get('TZ'):
     os.environ['TZ'] = 'Europe/Moscow'

@@ -8,9 +8,28 @@ https://docs.djangoproject.com/en/5.2/howto/deployment/wsgi/
 """
 
 import os
+import sys
+
+# from django.core.wsgi import get_wsgi_application
+
+# os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myshop.settings')
+
+# application = get_wsgi_application()
+
+# Добавляем путь к вашему проекту
+path = '/home/neboleyy/myshop'
+if path not in sys.path:
+    sys.path.append(path)
+
+# Устанавливаем настройки для продакшена
+os.environ['DJANGO_SETTINGS_MODULE'] = 'myshop.settings_production'
+
+# Для корректных абсолютных URL и SEO
+os.environ['SITE_URL'] = 'https://neboleyy.pythonanywhere.com'
+os.environ['PYTHONANYWHERE_SITE'] = 'neboleyy.pythonanywhere.com'
+
+# Для статических файлов
+os.environ['PYTHONANYWHERE_DOMAIN'] = 'pythonanywhere.com'
 
 from django.core.wsgi import get_wsgi_application
-
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'myshop.settings')
-
 application = get_wsgi_application()

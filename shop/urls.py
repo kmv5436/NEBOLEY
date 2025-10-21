@@ -1,8 +1,55 @@
-from django.urls import path
+from django.urls import path, reverse
 from django.utils.translation import gettext_lazy as _
+from django.contrib.sitemaps.views import sitemap
+from django.contrib.sitemaps import Sitemap
+from .models import Product, Category
 from . import views
+from django.views.generic.base import TemplateView
 
 app_name = 'shop'
+
+class ProductSitemap(Sitemap):
+    changefreq = "weekly"
+    priority = 0.8
+    protocol = 'https'  # ← Указываем протокол
+
+    def items(self):
+        return Product.objects.filter(is_active=True)
+    
+    def location(self, obj):
+        return f'/product/{obj.slug}/'  # Относительный путь
+
+    def lastmod(self, obj):
+        return obj.updated_at
+
+class CategorySitemap(Sitemap):
+    changefreq = "monthly"
+    priority = 0.6
+    protocol = 'https'  # ← Указываем протокол
+
+    def items(self):
+        return Category.objects.filter(is_active=True)
+    
+    def location(self, obj):
+        return f'/category/{obj.slug}/'
+    
+class StaticViewSitemap(Sitemap):
+    changefreq = "monthly"
+    priority = 0.5
+    protocol = 'https'
+
+    def items(self):
+        return ['product_list', 'category_list', 'about', 'contacts', 'delivery_info']
+
+    def location(self, item):
+        return reverse(f'shop:{item}')    
+
+sitemaps = {
+    'products': ProductSitemap,
+    'categories': CategorySitemap,
+    'static': StaticViewSitemap,
+}
+
 
 urlpatterns = [
     path('', views.product_list, name='product_list'),
@@ -27,5 +74,10 @@ urlpatterns = [
     path('contacts/', views.contacts, name='contacts'),
     path('about/', views.about, name='about'),
     path('payment/', views.payment_info, name='payment_info'),
+    path('sitemap.xml', sitemap, {'sitemaps': sitemaps}, name='django.contrib.sitemaps.views.sitemap'),
+    path('robots.txt', TemplateView.as_view(
+        template_name='robots.txt', 
+        content_type='text/plain'
+    )),
 ]
 
