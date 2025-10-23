@@ -14,79 +14,39 @@ import time
 import os
 from django.core.exceptions import ImproperlyConfigured
 
-# Базовый URL для sitemap и других абсолютных ссылок
-SITE_URL = 'https://neboley.pythonanywhere.com'
-
-# Для корректной работы абсолютных URL
-USE_X_FORWARDED_HOST = True
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+"""
+Django settings for myshop project.
+"""
 
 
-# Установка временной зоны
-if not os.environ.get('TZ'):
-    os.environ['TZ'] = 'Europe/Moscow'
-    try:
-        time.tzset()
-    except AttributeError:
-        pass  # На Windows не работает
-
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Загрузка .env файла для разработки
+# Загрузка .env файла
 from dotenv import load_dotenv
 load_dotenv(BASE_DIR / '.env')
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-# Безопасное получение SECRET_KEY
+# Безопасность
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = os.environ.get('DJANGO_DEBUG', 'True').lower() == 'true'
-
-# Автоматическое определение по домену (дополнительная проверка)
-import socket
-if DEBUG and socket.gethostname().endswith('.pythonanywhere.com'):
-    DEBUG = False
-    print("⚠️  Автоматически отключен DEBUG на PythonAnywhere")
-
-# Теперь проверяем SECRET_KEY после определения DEBUG
 if not SECRET_KEY:
-    if DEBUG:
-        # Только для разработки - предупреждение
-        SECRET_KEY = 'django-insecure-dev-key-only-' + os.urandom(32).hex()
-        print("⚠️  ВНИМАНИЕ: Используется временный ключ для разработки!")
-    else:
-        # В ПРОДАКШЕНЕ - ОШИБКА
-        raise ImproperlyConfigured("SECRET_KEY not set in production environment!")
-    
-# Настройки безопасности для продакшена
+    raise ImproperlyConfigured("SECRET_KEY not set in .env file!")
+
+DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
+ALLOWED_HOSTS = ['neboley.pythonanywhere.com', 'www.neboley.pythonanywhere.com']
+
+# Базовый URL
+SITE_URL = 'https://neboley.pythonanywhere.com'
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Настройки безопасности (только для продакшена)
 if not DEBUG:
-    # Безопасные настройки
-    # SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True    
-    SECURE_HSTS_SECONDS = 31536000  # 1 год
+    SECURE_CONTENT_TYPE_NOSNIFF = True
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
     SECURE_HSTS_PRELOAD = True
-
-ALLOWED_HOSTS = []
-
-if DEBUG:
-    # Хосты для разработки
-    ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-else:
-    # Хосты для продакшена (PythonAnywhere)
-    ALLOWED_HOSTS = [
-        'neboley.pythonanywhere.com',
-        'www.neboley.pythonanywhere.com',
-    ]
 
 # Application definition
 
