@@ -646,8 +646,8 @@ def new_arrivals(request):
     # Получаем все новые товары (без фильтра по наличию размеров)
     products = Product.objects.filter(
         is_active=True,
-        created_at__gte=thirty_days_ago
-    ).order_by('-created_at')
+        updated_at__gte=thirty_days_ago
+    ).order_by('-updated_at')
     
     # Добавляем информацию о наличии для каждого товара
     for product in products:

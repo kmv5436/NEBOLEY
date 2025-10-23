@@ -103,9 +103,11 @@ class ProductAdmin(admin.ModelAdmin):
         'name', 'category', 'price_display', 'old_price_display', 
         'is_active', 'is_featured', 'created_at', 'sizes_count', 'total_stock'
     ]
+
     list_filter = [
-        'category', 'is_active', 'is_featured', 'created_at'
+        'category', 'is_active', 'is_featured', 'created_at', 'updated_at'
     ]
+    ordering = ['-updated_at']  # Или добавить в существующий ordering
     search_fields = ['name', 'description', 'category__name']
     prepopulated_fields = {'slug': ('name',)}
     list_editable = ['is_active', 'is_featured']
@@ -133,6 +135,21 @@ class ProductAdmin(admin.ModelAdmin):
         }),
     )
     
+    def save_model(self, request, obj, form, change):
+        from django.utils import timezone
+        if change:
+            obj.updated_at = timezone.now()
+        super().save_model(request, obj, form, change)
+    
+    def save_formset(self, request, form, formset, change):
+        from django.utils import timezone
+        if formset.model != Product:  # Если это inline'ы (размеры, изображения, отзывы)
+            obj = form.instance
+            if obj and obj.pk:
+                obj.updated_at = timezone.now()
+                obj.save(update_fields=['updated_at'])
+        super().save_formset(request, form, formset, change)
+
     def price_display(self, obj):
         return obj.get_price_display()
     price_display.short_description = _('Базовая цена')

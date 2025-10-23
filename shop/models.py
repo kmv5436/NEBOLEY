@@ -593,3 +593,5 @@ class OrderItem(models.Model):
     @property
     def total_price(self):
         return self.price * self.quantity
+    
+    
