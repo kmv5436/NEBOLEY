@@ -15,7 +15,7 @@ import os
 from django.core.exceptions import ImproperlyConfigured
 
 # Базовый URL для sitemap и других абсолютных ссылок
-SITE_URL = 'https://neboleyy.pythonanywhere.com'
+SITE_URL = 'https://neboley.pythonanywhere.com'
 
 # Для корректной работы абсолютных URL
 USE_X_FORWARDED_HOST = True
@@ -67,11 +67,14 @@ if not SECRET_KEY:
 # Настройки безопасности для продакшена
 if not DEBUG:
     # Безопасные настройки
-    SECURE_SSL_REDIRECT = True
+    # SECURE_SSL_REDIRECT = True
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True    
+    SECURE_HSTS_SECONDS = 31536000  # 1 год
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True
 
 ALLOWED_HOSTS = []
 
@@ -254,3 +257,4 @@ except:
 
 # Для админки
 ADMIN_LANGUAGE_CODE = 'ru'
+

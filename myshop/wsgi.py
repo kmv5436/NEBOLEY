@@ -17,7 +17,7 @@ import sys
 # application = get_wsgi_application()
 
 # Добавляем путь к вашему проекту
-path = '/home/neboleyy/myshop'
+path = '/home/myshop'
 if path not in sys.path:
     sys.path.append(path)
 
@@ -25,8 +25,8 @@ if path not in sys.path:
 os.environ['DJANGO_SETTINGS_MODULE'] = 'myshop.settings_production'
 
 # Для корректных абсолютных URL и SEO
-os.environ['SITE_URL'] = 'https://neboleyy.pythonanywhere.com'
-os.environ['PYTHONANYWHERE_SITE'] = 'neboleyy.pythonanywhere.com'
+os.environ['SITE_URL'] = 'https://neboley.pythonanywhere.com'
+os.environ['PYTHONANYWHERE_SITE'] = 'neboley.pythonanywhere.com'
 
 # Для статических файлов
 os.environ['PYTHONANYWHERE_DOMAIN'] = 'pythonanywhere.com'
