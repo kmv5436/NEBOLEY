@@ -1,8 +1,12 @@
 User-agent: *
 Allow: /
 Disallow: /admin/
+Disallow: /private/
 Disallow: /cart/
 Disallow: /checkout/
+Disallow: /search/
 Disallow: /order/
 
 Sitemap: https://neboley.pythonanywhere.com/sitemap.xml
+
+

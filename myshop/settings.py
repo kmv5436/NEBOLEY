@@ -31,7 +31,8 @@ if not SECRET_KEY:
     raise ImproperlyConfigured("SECRET_KEY not set in .env file!")
 
 DEBUG = os.environ.get('DJANGO_DEBUG', 'False').lower() == 'true'
-ALLOWED_HOSTS = ['neboley.pythonanywhere.com', 'www.neboley.pythonanywhere.com']
+#ALLOWED_HOSTS = ['neboley.pythonanywhere.com', 'www.neboley.pythonanywhere.com']
+ALLOWED_HOSTS = ['127.0.0.1', 'localhost']
 
 # Базовый URL
 SITE_URL = 'https://neboley.pythonanywhere.com'
@@ -156,7 +157,7 @@ except:
 
 STATIC_URL = '/static/'
 # Для разработки
-STATICFILES_DIRS = [BASE_DIR / 'static']
+STATICFILES_DIRS = [BASE_DIR / 'shop' / 'static',]
 
 # Для продакшн
 STATIC_ROOT = BASE_DIR / 'staticfiles'

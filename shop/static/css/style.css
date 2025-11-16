@@ -1,0 +1,23 @@
+/* Базовые стили для всех устройств */
+.container {
+    width: 100%;
+    padding: 10px;
+}
+
+/* Для планшетов */
+@media (max-width: 768px) {
+    .container {
+        padding: 5px;
+    }
+}
+
+/* Для мобильных телефонов */
+@media (max-width: 480px) {
+    .container {
+        padding: 2px;
+    }
+    .menu {
+        flex-direction: column;
+    }
+}
+
